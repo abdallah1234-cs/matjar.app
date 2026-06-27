@@ -128,5 +128,3 @@ with tab2:
         if st.button("🗑️ مسح جميع الطلبات المستلمة"):
             st.session_state.orders = []
             st.rerun()
-                    use_container_width=True
-                )
