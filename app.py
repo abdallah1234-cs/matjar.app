@@ -113,7 +113,7 @@ def save_orders(orders):
     with open('orders.json', 'w', encoding='utf-8') as f:
         json.dump(orders, f, ensure_ascii=False, indent=4)
 
-# تهيئة البيانات في الجلسة لضمان التحميل الفوري
+# تهيئة المنتجات تلقائياً في الجلسة لضمان التحميل الفوري
 st.session_state.products = load_data()
 
 if 'cart' not in st.session_state:
@@ -127,14 +127,15 @@ if 'user_email' not in st.session_state:
 if 'auth_mode' not in st.session_state:
     st.session_state.auth_mode = "login"
 
+# المجموعات والأقسام المعتمدة في النظام
 AVAILABLE_CATEGORIES = ["ملابس", "اكسسوارات", "أحذية", "حقائب"]
 
 # =========================================================
-# 🎨 واجهة CSS3 المتقدمة والمحدثة لحل مشاكل الهواتف والوضع الداكن
+# 🎨 واجهة CSS3 المتقدمة لإضافة الطابع الاحترافي العصري للموقع
 # =========================================================
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght=400;500;700&display=swap');
     
     html, body, [data-testid="stSidebar"], .stButton, div, h1, h2, h3, h4, p, label {
         font-family: 'Tajawal', sans-serif !important;
@@ -142,14 +143,14 @@ st.markdown("""
         text-align: right;
     }
     
-    /* تحسين شكل وألوان أزرار الأقسام التفاعلية لتناسب الوضع الداكن والفاتح */
+    /* تحسين أزرار الراديو (الأقسام) لتبدو بارزة وواضحة جداً */
     div[data-testid="stRadio"] div[role="radiogroup"] {
         gap: 15px;
     }
     div[data-testid="stRadio"] label {
         padding: 12px 24px !important;
         background: #ffffff !important;
-        color: #111111 !important; /* نصوص الأزرار داكنة لتبدو واضحة دائماً */
+        color: #111111 !important;
         border: 2px solid #dee2e6 !important;
         border-radius: 8px !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
@@ -178,7 +179,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# تقسيم التطبيق المطور باستخدام نافذتين (واجهة التسوق / لوحة التحكم)
+# تقسيم التطبيق إلى صفحات رئيسية باستخدام Tabs
 tab1, tab2 = st.tabs(["🛒 واجهة التسوق والسلة", "👨‍💼 لوحة تحكم التاجر"])
 
 # ==================== 1️⃣ واجهة التسوق والسلة ====================
@@ -210,7 +211,6 @@ with tab1:
                 st.write(prod.get("desc", ""))
                 st.markdown(f"💰 **السعر:** {prod.get('price', 0)} دينار أردني")
                 
-                # إدارة إضافة السلة بآلية الحساب الذكي
                 prod_id = str(prod.get("id"))
                 if st.button(f"إضافة إلى السلة 🛒", key=f"buy_{prod_id}"):
                     if prod_id in st.session_state.cart:
@@ -251,4 +251,94 @@ with tab1:
         
         # نموذج إرسال الطلب وحفظه للتاجر
         st.write("### 📞 أدخل بياناتك لشحن وتأكيد الطلب:")
-        c_name = st.text_input("اسمك الكامل", key="order
+        c_name = st.text_input("اسمك الكامل", key="order_name")
+        c_phone = st.text_input("رقم الهاتف الفعال", key="order_phone")
+        
+        if st.button("✅ إتمام عملية الشراء وإرسال الطلب"):
+            if c_name and c_phone:
+                all_orders = load_orders()
+                new_order_data = {
+                    "الوقت": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "الاسم": c_name,
+                    "الهاتف": c_phone,
+                    "المنتجات الواردة": ", ".join(order_items_text),
+                    "المجموع الإجمالي": f"{total_bill} دينار"
+                }
+                all_orders.append(new_order_data)
+                save_orders(all_orders)
+                st.session_state.cart = {}
+                st.success("🎉 تم إرسال طلبك بنجاح إلى إدارة المتجر! شكرًا لتسوقك معنا.")
+                st.rerun()
+            else:
+                st.warning("الرجاء تعبئة الاسم ورقم الهاتف لتتمكن من الشراء.")
+
+# ==================== 2️⃣ لوحة تحكم التاجر ====================
+with tab2:
+    st.title("👨‍💼 لوحة الإدارة والتحكم (التاجر)")
+    
+    if not st.session_state.logged_in:
+        st.subheader("🔒 يرجى تسجيل الدخول للوصول للوحة التحكم")
+        users_db = load_users()
+        
+        login_email = st.text_input("البريد الإلكتروني للتاجر")
+        login_password = st.text_input("كلمة المرور", type="password")
+        
+        if st.button("تسجيل الدخول 🔑"):
+            if login_email in users_db and users_db[login_email] == login_password:
+                st.session_state.logged_in = True
+                st.session_state.user_email = login_email
+                st.success("تم تسجيل الدخول بنجاح!")
+                st.rerun()
+            else:
+                st.error("بيانات الدخول خاطئة! يرجى المحاولة مجدداً.")
+    else:
+        st.write(f"مرحباً بك مجدداً: `{st.session_state.user_email}`")
+        if st.button("تسجيل الخروج 🚪"):
+            st.session_state.logged_in = False
+            st.rerun()
+            
+        st.write("---")
+        
+        # قسم الطلبات الواردة
+        st.subheader("🔔 الطلبات الواردة من المستخدمين حالياً")
+        current_orders = load_orders()
+        if not current_orders:
+            st.info("لا توجد طلبات جديدة مستلمة حتى اللحظة.")
+        else:
+            df_orders = pd.DataFrame(current_orders)
+            st.dataframe(df_orders, use_container_width=True)
+            if st.button("🗑️ تفريغ ومسح سجل الطلبات المستلمة"):
+                save_orders([])
+                st.rerun()
+                
+        st.write("---")
+        
+        # نظام إدارة وإضافة المنتجات
+        st.subheader("🛠️ إدارة المنتجات المعروضة")
+        with st.form("add_new_product_form", clear_on_submit=True):
+            st.write("➕ **إضافة منتج جديد للمتجر**")
+            new_name = st.text_input("اسم المنتج الجديد")
+            new_category = st.selectbox("قسم المنتج", AVAILABLE_CATEGORIES)
+            new_price = st.number_input("السعر (دينار)", min_value=0.0, step=0.5)
+            new_desc = st.text_area("وصف وتفاصيل المنتج")
+            new_img_file = st.file_uploader("ارفع صورة المنتج من جهازك", type=["jpg", "png", "jpeg"])
+            
+            if st.form_submit_button("حفظ وإضافة المنتج الجديد ✨"):
+                if new_name and new_price > 0:
+                    img_url = convert_image_to_base64(new_img_file) if new_img_file else "https://via.placeholder.com/500"
+                    
+                    new_id = max([p.get("id", 0) for p in st.session_state.products]) + 1 if st.session_state.products else 1
+                    new_prod = {
+                        "id": new_id,
+                        "name": new_name,
+                        "category": new_category,
+                        "price": new_price,
+                        "image": img_url,
+                        "desc": new_desc
+                    }
+                    st.session_state.products.append(new_prod)
+                    save_data(st.session_state.products)
+                    st.success(f"تمت إضافة منتج ({new_name}) بنجاح!")
+                    st.rerun()
+                else:
+                    st.error("الرجاء كتابة اسم المنتج وتحديد سعر صحيح.")
