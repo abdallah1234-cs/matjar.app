@@ -5,26 +5,18 @@ from datetime import datetime
 # إعدادات الصفحة الأساسية
 st.set_page_config(page_title="متجر matjar.jo الإلكتروني", page_icon="🛍️", layout="wide")
 
-# تصميم CSS مخصص لإصلاح ألوان النصوص على الهواتف والأجهزة المختلفة
+# تصميم CSS مخصص لإصلاح أزرار الأقسام فقط دون التأثير على نصوص المتجر الأخرى
 st.markdown("""
     <style>
-    /* تحسين شكل وألوان أزرار الأقسام التفاعلية لتظهر بوضوح */
+    /* تحسين شكل وألوان أزرار الأقسام التفاعلية لتظهر بوضوح دائماً */
     .stRadio div[role="radiogroup"] label {
-        background-color: #f8f9fa !important;
-        color: #111111 !important; /* لون نص أسود واضح جداً */
-        border: 1px solid #dee2e6 !important;
+        background-color: #ffffff !important;
+        color: #111111 !important; /* لون نص أسود واضح جداً داخل الزر الأبيض */
+        border: 2px solid #dee2e6 !important;
         padding: 10px 20px !important;
         border-radius: 8px !important;
         font-weight: bold !important;
         margin-bottom: 5px !important;
-    }
-    /* تحسين نصوص المتجر العامة */
-    h1, h2, h3, p, span {
-        color: #111111 !important;
-    }
-    .stTabs [data-baseweb="tab"] {
-        font-size: 16px !important;
-        font-weight: bold !important;
     }
     </style>
 """, unsafe_allow_html=True)
